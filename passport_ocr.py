@@ -209,10 +209,11 @@ class PassportOCR:
 
                 # Date of birth (chars 13-18, YYMMDD)
                 bd = line2[13:19]
-                if len(bd) == 6 and bd[0:3].isdigit():
+                if len(bd) == 6 and bd[:3].isdigit():
                     result['birth_date_raw'] = bd
                     yy, mm, dd = bd[:2], bd[2:4], bd[4:6]
-                    yyyy = '19' + yy if int(yy) > 25 else '20' + yy
+                    # 出生日期：YY>目前年→19XX（不可能未來出生），否則20XX
+                    yyyy = '19' + yy if int(yy) > 26 else '20' + yy
                     if mm.isdigit() and dd.isdigit():
                         result['birth_date'] = f'{yyyy}-{mm}-{dd}'
 
@@ -222,10 +223,11 @@ class PassportOCR:
 
                 # Expiry date (chars 21-26, YYMMDD)
                 ed = line2[21:27]
-                if len(ed) == 6 and ed[0:3].isdigit():
+                if len(ed) == 6 and ed[:3].isdigit():
                     result['expiry_raw'] = ed
                     yy, mm, dd = ed[:2], ed[2:4], ed[4:6]
-                    yyyy = '19' + yy if int(yy) > 25 else '20' + yy
+                    # 有效期限：一律用20XX（現代護照都是2000年後簽發）
+                    yyyy = '20' + yy
                     if mm.isdigit() and dd.isdigit():
                         result['expiration_date'] = f'{yyyy}-{mm}-{dd}'
 
