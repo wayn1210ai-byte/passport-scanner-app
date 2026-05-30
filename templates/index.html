@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小柴子護照掃描器 🐾</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        /* ===== CSS Reset & Variables ===== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #1a1a2e;
+            --bg-card: #16213e;
+            --bg-card-hover: #1a2a4e;
+            --accent: #e8a87c;
+            --accent-light: #f5cba0;
+            --accent-dark: #c9885c;
+            --text: #f0e6d3;
+            --text-muted: #a8927a;
+            --positive: #6bcf9e;
+            --border: #2a3a5e;
+            --shadow: 0 8px 32px rgba(0,0,0,0.3);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --font-sans: 'Noto Sans TC', sans-serif;
+            --font-display: 'Playfair Display', serif;
+        }
+        html { font-size: 16px; }
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image:
+                radial-gradient(ellipse at 20% 50%, rgba(232,168,124,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 50%, rgba(107,207,158,0.04) 0%, transparent 50%),
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23e8a87c' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* ===== Header ===== */
+        header {
+            width: 100%;
+            max-width: 600px;
+            padding: 2rem 1rem 1rem;
+            text-align: center;
+            position: relative;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .logo svg {
+            width: 48px;
+            height: 48px;
+        }
+        h1 {
+            font-family: var(--font-sans);
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: var(--accent);
+            letter-spacing: 2px;
+        }
+        h1 .paw {
+            display: inline-block;
+            animation: pawBounce 2s ease-in-out infinite;
+        }
+        @keyframes pawBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 300;
+            letter-spacing: 4px;
+        }
+
+        /* ===== Status Badge ===== */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            margin-top: 10px;
+        }
+        .status-badge.connected {
+            background: rgba(107,207,158,0.15);
+            color: var(--positive);
+            border: 1px solid rgba(107,207,158,0.3);
+        }
+        .status-badge.disconnected {
+            background: rgba(255,170,140,0.12);
+            color: #ffaa8c;
+            border: 1px solid rgba(255,170,140,0.25);
+        }
+        .status-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-dot.green { background: var(--positive); }
+        .status-dot.orange { background: #ffaa8c; }
+
+        /* ===== Card Container ===== */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.8rem;
+            margin: 1rem;
+            max-width: 560px;
+            width: calc(100% - 2rem);
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--positive), var(--accent));
+            background-size: 200% 100%;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+        @keyframes shimmer {
+            0%, 100% { background-position: 0% 0%; }
+            50% { background-position: 100% 0%; }
+        }
+
+        /* ===== Upload Area ===== */
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-sm);
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .upload-area:hover,
+        .upload-area.dragover {
+            border-color: var(--accent);
+            background: rgba(232,168,124,0.05);
+        }
+        .upload-area .icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+            display: block;
+        }
+        .upload-area p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        .upload-area .highlight {
+            color: var(--accent);
+            font-weight: 500;
+        }
+        .upload-area input[type="file"] {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* ===== Camera Button ===== */
+        .camera-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            padding: 10px 24px;
+            background: linear-gradient(135deg, var(--accent-dark), var(--accent));
+            color: var(--bg);
+            border: none;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: var(--font-sans);
+        }
+        .camera-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(232,168,124,0.3);
+        }
+        .camera-btn:active {
+            transform: translateY(0);
+        }
+
+        /* ===== Camera Preview ===== */
+        #camera-container {
+            display: none;
+            margin-top: 16px;
+            position: relative;
+        }
+        #camera-container video {
+            width: 100%;
+            border-radius: var(--radius-sm);
+            background: #000;
+        }
+        #camera-container .btn-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            justify-content: center;
+        }
+        .capture-btn {
+            padding: 10px 28px;
+            background: var(--positive);
+            color: var(--bg);
+            border: none;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: var(--font-sans);
+            transition: all 0.2s ease;
+        }
+        .capture-btn:hover {
+            transform: scale(1.05);
+        }
+        .cancel-btn {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.1);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            border-radius: 25px;
+            cursor: pointer;
+            font-family: var(--font-sans);
+        }
+
+        /* ===== Preview Image ===== */
+        #preview-container {
+            display: none;
+            margin-top: 16px;
+            text-align: center;
+        }
+        #preview-container img {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow);
+        }
+
+        /* ===== Scan Button ===== */
+        .scan-btn {
+            display: none;
+            width: 100%;
+            margin-top: 16px;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--accent-dark), var(--accent));
+            color: var(--bg);
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: var(--font-sans);
+            letter-spacing: 2px;
+        }
+        .scan-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(232,168,124,0.35);
+        }
+        .scan-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ===== Loading ===== */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* ===== Result Card ===== */
+        #result {
+            display: none;
+            margin-top: 20px;
+        }
+        #result h2 {
+            font-size: 1.1rem;
+            color: var(--accent);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .field-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .field-table tr {
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .field-table tr:last-child { border-bottom: none; }
+        .field-table td {
+            padding: 8px 4px;
+            font-size: 0.85rem;
+            vertical-align: top;
+        }
+        .field-table .label {
+            color: var(--text-muted);
+            width: 90px;
+            font-weight: 400;
+        }
+        .field-table .value {
+            color: var(--text);
+            font-weight: 500;
+        }
+        .field-table .empty {
+            color: var(--text-muted);
+            font-style: italic;
+            font-weight: 300;
+        }
+        .sheet-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            margin-top: 12px;
+        }
+        .sheet-badge.saved {
+            background: rgba(107,207,158,0.15);
+            color: var(--positive);
+        }
+        .sheet-badge.not-saved {
+            background: rgba(255,170,140,0.12);
+            color: #ffaa8c;
+        }
+
+        /* ===== Footer ===== */
+        footer {
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            opacity: 0.6;
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 480px) {
+            .card { padding: 1.2rem; margin: 0.6rem; width: calc(100% - 1.2rem); }
+            h1 { font-size: 1.3rem; }
+            .upload-area { padding: 1.5rem 1rem; }
+            .upload-area .icon { font-size: 2.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">
+        <svg viewBox="0 0 48 48" width="48" height="48">
+            <circle cx="24" cy="24" r="22" fill="#e8a87c" opacity="0.15"/>
+            <!-- Xiao Chai Zi face -->
+            <ellipse cx="24" cy="26" rx="14" ry="12" fill="#f0d5b0"/>
+            <!-- Shiba ears -->
+            <polygon points="12,18 8,4 18,14" fill="#e8a87c" stroke="#d4956a" stroke-width="0.5"/>
+            <polygon points="36,18 40,4 30,14" fill="#e8a87c" stroke="#d4956a" stroke-width="0.5"/>
+            <polygon points="14,16 10,7 17,14" fill="#f0d5b0"/>
+            <polygon points="34,16 38,7 31,14" fill="#f0d5b0"/>
+            <!-- Eyes -->
+            <circle cx="18" cy="24" r="2.5" fill="#4a3728"/>
+            <circle cx="30" cy="24" r="2.5" fill="#4a3728"/>
+            <circle cx="19" cy="23" r="1" fill="white" opacity="0.7"/>
+            <circle cx="31" cy="23" r="1" fill="white" opacity="0.7"/>
+            <!-- Nose -->
+            <ellipse cx="24" cy="28" rx="2" ry="1.5" fill="#4a3728"/>
+            <!-- Mouth -->
+            <path d="M20 31 Q24 36 28 31" stroke="#4a3728" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+            <!-- Blush -->
+            <ellipse cx="14" cy="28" rx="3" ry="2" fill="#ffaaa5" opacity="0.4"/>
+            <ellipse cx="34" cy="28" rx="3" ry="2" fill="#ffaaa5" opacity="0.4"/>
+            <!-- Headset mic -->
+            <path d="M14 18 L14 14 Q14 10 18 10" stroke="#d4956a" stroke-width="1.5" fill="none"/>
+            <circle cx="14" cy="18" r="3" fill="#d4956a"/>
+            <circle cx="14" cy="18" r="1.5" fill="white"/>
+        </svg>
+        <h1>小柴子<span class="paw">🐾</span>護照掃描器</h1>
+    </div>
+    <div class="subtitle">📸 拍照即辨識・自動匯入試算表</div>
+    {% if sheet_ok %}
+    <div class="status-badge connected">
+        <span class="status-dot green"></span>
+        Google 試算表已連線 ✓
+    </div>
+    {% else %}
+    <div class="status-badge disconnected">
+        <span class="status-dot orange"></span>
+        Google 試算表未設定
+        <a href="{{ url_for('setup_guide') }}" style="color:var(--accent);margin-left:4px;">設定</a>
+    </div>
+    {% endif %}
+</header>
+
+<!-- Main Card -->
+<div class="card">
+    <!-- Upload Area -->
+    <div class="upload-area" id="uploadArea">
+        <span class="icon">📱</span>
+        <p>點擊上傳 <span class="highlight">護照照片</span><br>
+        或直接拍一張</p>
+        <input type="file" id="fileInput" accept="image/*" capture="environment">
+    </div>
+
+    <!-- Camera Button -->
+    <button class="camera-btn" id="cameraBtn" onclick="openCamera()">
+        📷 開啟相機拍照
+    </button>
+
+    <!-- Camera Preview -->
+    <div id="camera-container">
+        <video id="video" autoplay playsinline></video>
+        <div class="btn-row">
+            <button class="cancel-btn" onclick="closeCamera()">取消</button>
+            <button class="capture-btn" onclick="capturePhoto()">📸 拍照</button>
+        </div>
+    </div>
+
+    <!-- Preview -->
+    <div id="preview-container">
+        <img id="preview" alt="Preview">
+    </div>
+
+    <!-- Scan Button -->
+    <button class="scan-btn" id="scanBtn" onclick="startScan()">
+        🔍 開始辨識護照
+    </button>
+
+    <!-- Loading -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>小柴子正在努力辨識中⋯🐶✨</p>
+        <p style="font-size:0.75rem;margin-top:4px;">請稍候，這只需要幾秒鐘</p>
+    </div>
+
+    <!-- Result -->
+    <div id="result">
+        <h2>📋 辨識結果</h2>
+        <table class="field-table" id="resultTable"></table>
+        <div id="sheetStatus"></div>
+        <div id="rawText" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+            <p style="color:var(--text-muted);font-size:0.75rem;margin-bottom:4px;">原始 OCR 節錄</p>
+            <p style="font-size:0.75rem;font-family:monospace;word-break:break-all;" id="rawTextContent"></p>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="text-align:center;">
+    <p style="color:var(--text-muted);font-size:0.85rem;line-height:1.6;">
+        🛡️ 照片僅供即時辨識，處理完後自動刪除<br>
+        資料直接寫入你的 Google 試算表
+    </p>
+    <p style="margin-top:10px;">
+        <a href="{{ url_for('records') }}" style="color:var(--accent);font-size:0.85rem;text-decoration:none;">
+            📊 查看掃描紀錄 →
+        </a>
+    </p>
+</div>
+
+<footer>
+    再次闖入AI叢林的老柴 · 小柴子製作 🐾
+</footer>
+
+<script>
+// ===== File Upload =====
+const fileInput = document.getElementById('fileInput');
+const uploadArea = document.getElementById('uploadArea');
+const preview = document.getElementById('preview');
+const previewContainer = document.getElementById('preview-container');
+const scanBtn = document.getElementById('scanBtn');
+const loading = document.getElementById('loading');
+const result = document.getElementById('result');
+const resultTable = document.getElementById('resultTable');
+const sheetStatus = document.getElementById('sheetStatus');
+const rawTextContent = document.getElementById('rawTextContent');
+
+let currentFile = null;
+
+fileInput.addEventListener('change', function(e) {
+    if (this.files && this.files[0]) {
+        currentFile = this.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            previewContainer.style.display = 'block';
+            scanBtn.style.display = 'block';
+            uploadArea.style.display = 'none';
+            document.getElementById('cameraBtn').style.display = 'none';
+        };
+        reader.readAsDataURL(this.files[0]);
+    }
+});
+
+uploadArea.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    this.classList.add('dragover');
+});
+uploadArea.addEventListener('dragleave', function() {
+    this.classList.remove('dragover');
+});
+uploadArea.addEventListener('drop', function(e) {
+    e.preventDefault();
+    this.classList.remove('dragover');
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        fileInput.files = e.dataTransfer.files;
+        fileInput.dispatchEvent(new Event('change'));
+    }
+});
+
+// ===== Camera =====
+let videoStream = null;
+
+function openCamera() {
+    const container = document.getElementById('camera-container');
+    container.style.display = 'block';
+    uploadArea.style.display = 'none';
+    document.getElementById('cameraBtn').style.display = 'none';
+
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
+        }).then(function(stream) {
+            videoStream = stream;
+            document.getElementById('video').srcObject = stream;
+        }).catch(function(err) {
+            alert('無法開啟相機：' + err.message);
+            closeCamera();
+        });
+    } else {
+        alert('你的裝置不支援相機功能');
+        closeCamera();
+    }
+}
+
+function closeCamera() {
+    if (videoStream) {
+        videoStream.getTracks().forEach(t => t.stop());
+        videoStream = null;
+    }
+    document.getElementById('camera-container').style.display = 'none';
+    uploadArea.style.display = 'block';
+    document.getElementById('cameraBtn').style.display = 'inline-flex';
+}
+
+function capturePhoto() {
+    const video = document.getElementById('video');
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+
+    canvas.toBlob(function(blob) {
+        currentFile = new File([blob], 'passport_photo.jpg', { type: 'image/jpeg' });
+        preview.src = canvas.toDataURL('image/jpeg');
+        previewContainer.style.display = 'block';
+        scanBtn.style.display = 'block';
+        closeCamera();
+    }, 'image/jpeg', 0.95);
+}
+
+// ===== Scan =====
+async function startScan() {
+    if (!currentFile) return;
+
+    scanBtn.style.display = 'none';
+    previewContainer.style.display = 'none';
+    loading.style.display = 'block';
+    result.style.display = 'none';
+
+    const formData = new FormData();
+    formData.append('file', currentFile);
+
+    try {
+        const response = await fetch('/scan', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+
+        loading.style.display = 'none';
+        result.style.display = 'block';
+
+        if (data.success) {
+            renderFields(data.fields);
+            renderSheetStatus(data.sheet_written);
+            rawTextContent.textContent = data.raw_text || '(無文字)';
+        } else {
+            resultTable.innerHTML = `
+                <tr><td colspan="2" style="text-align:center;padding:20px;color:#ffaa8c;">
+                    ❌ 辨識失敗<br><span style="font-size:0.8rem;">${data.error || '請確認照片清晰且包含護照資料頁'}</span>
+                </td></tr>
+            `;
+            rawTextContent.textContent = data.raw_text || '';
+        }
+    } catch (err) {
+        loading.style.display = 'none';
+        result.style.display = 'block';
+        resultTable.innerHTML = `<tr><td style="text-align:center;padding:20px;color:#ff6b6b;">❌ 網路錯誤：${err.message}</td></tr>`;
+    }
+}
+
+function renderFields(fields) {
+    const fieldKeys = [
+        '姓氏', '名字', '護照號碼', '國籍',
+        '出生日期', '性別', '有效期限', '個人ID',
+        '簽發日期', '出生地', '簽發機關'
+    ];
+    let html = '';
+    let hasData = false;
+    for (const key of fieldKeys) {
+        const val = fields[key] || '';
+        if (val) hasData = true;
+        html += `<tr>
+            <td class="label">${key}</td>
+            <td class="value ${val ? '' : 'empty'}">${val || '—'}</td>
+        </tr>`;
+    }
+    if (!hasData) {
+        html = `<tr><td colspan="2" style="text-align:center;padding:20px;color:#ffaa8c;">
+            ⚠️ 部分欄位未能辨識，建議重新拍攝清晰照片
+        </td></tr>` + html;
+    }
+    resultTable.innerHTML = html;
+}
+
+function renderSheetStatus(written) {
+    if (written) {
+        sheetStatus.innerHTML = `<div class="sheet-badge saved">✅ 已儲存至 Google 試算表</div>`;
+    } else {
+        sheetStatus.innerHTML = `<div class="sheet-badge not-saved">⚠️ 未儲存至試算表（請檢查設定）</div>`;
+    }
+}
+
+// Reset for next scan
+function resetForm() {
+    currentFile = null;
+    previewContainer.style.display = 'none';
+    scanBtn.style.display = 'none';
+    result.style.display = 'none';
+    loading.style.display = 'none';
+    uploadArea.style.display = 'block';
+    document.getElementById('cameraBtn').style.display = 'inline-flex';
+    fileInput.value = '';
+}
+
+// Allow re-scan by clicking result area
+document.addEventListener('click', function(e) {
+    if (e.target.closest('#result') && !e.target.closest('a')) {
+        // Double tap result to re-scan
+    }
+});
+</script>
+
+</body>
+</html>

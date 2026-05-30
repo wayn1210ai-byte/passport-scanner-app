@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>掃描紀錄 - 小柴子護照掃描器</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #1a1a2e;
+            --bg-card: #16213e;
+            --accent: #e8a87c;
+            --text: #f0e6d3;
+            --text-muted: #a8927a;
+            --border: #2a3a5e;
+            --radius: 12px;
+            --font: 'Noto Sans TC', sans-serif;
+        }
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 1rem;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23e8a87c' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            padding: 2rem 0 1.5rem;
+        }
+        h1 {
+            color: var(--accent);
+            font-size: 1.4rem;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 8px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+        .back-link:hover { color: var(--accent); }
+        .stats {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+        }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+        th {
+            text-align: left;
+            color: var(--text-muted);
+            font-weight: 500;
+            padding: 8px 6px;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+        td {
+            padding: 8px 6px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        tr:hover td {
+            background: rgba(232,168,124,0.04);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted);
+        }
+        .empty-state .icon { font-size: 3rem; margin-bottom: 1rem; }
+        .error {
+            text-align: center;
+            padding: 2rem;
+            color: #ffaa8c;
+        }
+        @media (max-width: 600px) {
+            table { font-size: 0.7rem; }
+            th, td { padding: 6px 4px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>📊 護照掃描紀錄</h1>
+        <a href="{{ url_for('index') }}" class="back-link">← 回到掃描器</a>
+    </header>
+
+    {% if error %}
+    <div class="card error">{{ error }}</div>
+    {% endif %}
+
+    <div class="stats">
+        共 {{ count }} 筆紀錄
+        {% if count > 0 %}
+        · <a href="{{ url_for('index') }}" style="color:var(--accent);text-decoration:none;">+ 新增掃描</a>
+        {% endif %}
+    </div>
+
+    {% if records %}
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th>時間</th>
+                    <th>姓氏</th>
+                    <th>名字</th>
+                    <th>護照號碼</th>
+                    <th>國籍</th>
+                    <th>出生日期</th>
+                    <th>性別</th>
+                    <th>有效期限</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in records %}
+                <tr>
+                    <td>{{ r.get('掃描時間', '')[:16] }}</td>
+                    <td>{{ r.get('姓氏', r.get('surname', '')) }}</td>
+                    <td>{{ r.get('名字', r.get('names', '')) }}</td>
+                    <td style="font-family:monospace;">{{ r.get('護照號碼', r.get('passport_number', '')) }}</td>
+                    <td>{{ r.get('國籍', r.get('nationality', '')) }}</td>
+                    <td>{{ r.get('出生日期', r.get('birth_date', '')) }}</td>
+                    <td>{{ r.get('性別', r.get('sex', '')) }}</td>
+                    <td>{{ r.get('有效期限', r.get('expiration_date', '')) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="card empty-state">
+        <div class="icon">📄</div>
+        <p>還沒有掃描紀錄</p>
+        <p style="margin-top:8px;"><a href="{{ url_for('index') }}" style="color:var(--accent);text-decoration:none;">開始第一筆掃描 →</a></p>
+    </div>
+    {% endif %}
+</div>
+</body>
+</html>

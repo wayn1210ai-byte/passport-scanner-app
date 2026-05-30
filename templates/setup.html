@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>設定 Google 試算表 - 小柴子護照掃描器</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #1a1a2e;
+            --bg-card: #16213e;
+            --accent: #e8a87c;
+            --text: #f0e6d3;
+            --text-muted: #a8927a;
+            --border: #2a3a5e;
+            --radius: 12px;
+            --font: 'Noto Sans TC', sans-serif;
+        }
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        .container {
+            max-width: 680px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            padding: 2rem 0 1.5rem;
+        }
+        h1 { color: var(--accent); font-size: 1.4rem; }
+        .back-link {
+            display: inline-block; margin-top: 8px;
+            color: var(--text-muted); text-decoration: none; font-size: 0.85rem;
+        }
+        .back-link:hover { color: var(--accent); }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        h2 {
+            font-size: 1.05rem;
+            color: var(--accent);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .step {
+            counter-increment: step-counter;
+            margin-bottom: 20px;
+            padding-left: 10px;
+            border-left: 2px solid var(--border);
+        }
+        .step:last-child { margin-bottom: 0; }
+        .step .num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px; height: 26px;
+            background: var(--accent);
+            color: var(--bg);
+            border-radius: 50%;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-right: 8px;
+        }
+        .step h3 {
+            display: inline;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+        .step p {
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+        }
+        .step code {
+            display: block;
+            background: rgba(0,0,0,0.3);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            margin-top: 6px;
+            word-break: break-all;
+            color: var(--accent-light);
+            font-family: monospace;
+        }
+        .step .note {
+            margin-top: 6px;
+            padding: 8px 12px;
+            background: rgba(107,207,158,0.1);
+            border-radius: 6px;
+            font-size: 0.8rem;
+            color: #6bcf9e;
+        }
+        a { color: var(--accent); }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>⚙️ Google 試算表設定</h1>
+        <a href="{{ url_for('index') }}" class="back-link">← 回到掃描器</a>
+    </header>
+
+    <div class="card" style="counter-reset: step-counter;">
+        <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:20px;line-height:1.6;">
+            想讓掃描的資料自動寫入 Google 試算表嗎？跟著以下步驟，5 分鐘搞定！
+        </p>
+
+        <div class="step">
+            <h3><span class="num">1</span> 建立 Google Cloud 專案</h3>
+            <p>前往 <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a>，登入你的 Google 帳號，點擊頂端選單建立一個新專案（名稱隨便取，例如「passport-scanner」）。</p>
+        </div>
+
+        <div class="step">
+            <h3><span class="num">2</span> 啟用 Google Sheets API</h3>
+            <p>在左側選單 → 「API 和服務」 → 「程式庫」，搜尋 <strong>Google Sheets API</strong>，點進去按「啟用」。</p>
+        </div>
+
+        <div class="step">
+            <h3><span class="num">3</span> 建立服務帳戶</h3>
+            <p>左側選單 → 「API 和服務」 → 「憑證」 → 上方點「建立憑證」 → 「服務帳戶」。</p>
+            <p>名稱填 <code>passport-scanner-sa</code>，角色可以先不用選，按「完成」。</p>
+        </div>
+
+        <div class="step">
+            <h3><span class="num">4</span> 產生金鑰</h3>
+            <p>在服務帳戶列表找到剛建立的帳戶，點擊進入。切到「金鑰」分頁 → 「新增金鑰」 → 「JSON」。</p>
+            <p>瀏覽器會自動下載一個 <code>.json</code> 檔案，這就是你的私鑰！</p>
+            <div class="note">
+                📁 把這個 JSON 檔案存好，等一下要上傳到伺服器
+            </div>
+        </div>
+
+        <div class="step">
+            <h3><span class="num">5</span> 建立 Google 試算表</h3>
+            <p>前往 <a href="https://sheets.google.com/" target="_blank">Google 試算表</a>，建立一個新的試算表。名稱建議取 <strong>護照掃描紀錄</strong>。</p>
+            <p>點擊右上角「共用」，加入剛才的服務帳戶 Email（在 JSON 金鑰檔裡面的 <code>client_email</code> 欄位），權限設為「編輯者」。</p>
+            <div class="note">
+                📌 把試算表的網址記下來，裡面的 ID 長這樣：<code>1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms</code>
+            </div>
+        </div>
+
+        <div class="step">
+            <h3><span class="num">6</span> 設定到 App 中</h3>
+            <p>將以下兩個環境變數設定到你的伺服器：</p>
+            <code>GOOGLE_SHEET_CREDENTIALS_JSON = (把 JSON 金鑰檔的內容整段貼進來)</code>
+            <code>GOOGLE_SHEET_ID = 你的試算表ID（上面網址裡那一串）</code>
+            <p style="margin-top:8px;">設定完成後重新啟動 App，右上角就會出現 ✅ Google 試算表已連線！</p>
+        </div>
+    </div>
+
+    <div class="card" style="text-align:center;">
+        <p style="color:var(--text-muted);font-size:0.85rem;">不想設定 Google 試算表？沒關係！</p>
+        <p style="margin-top:6px;">App 還是可以正常掃描護照，只是資料不會自動儲存喔～</p>
+        <p style="margin-top:12px;"><a href="{{ url_for('index') }}" style="color:var(--accent);text-decoration:none;">← 直接開始掃描</a></p>
+    </div>
+</div>
+</body>
+</html>
