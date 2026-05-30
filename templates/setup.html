@@ -11,11 +11,13 @@
             --bg: #1a1a2e;
             --bg-card: #16213e;
             --accent: #e8a87c;
+            --accent-light: #f5cba0;
             --text: #f0e6d3;
             --text-muted: #a8927a;
             --border: #2a3a5e;
             --radius: 12px;
             --font: 'Noto Sans TC', sans-serif;
+            --card-shadow: 0 8px 32px rgba(0,0,0,0.3);
         }
         body {
             font-family: var(--font);
@@ -23,16 +25,26 @@
             color: var(--text);
             min-height: 100vh;
             padding: 1rem;
+            background-image: radial-gradient(ellipse at 20% 50%, rgba(232,168,124,0.06) 0%, transparent 50%);
         }
         .container {
-            max-width: 680px;
+            max-width: 720px;
             margin: 0 auto;
         }
         header {
             text-align: center;
             padding: 2rem 0 1.5rem;
         }
-        h1 { color: var(--accent); font-size: 1.4rem; }
+        h1 {
+            color: var(--accent);
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 6px;
+        }
         .back-link {
             display: inline-block; margin-top: 8px;
             color: var(--text-muted); text-decoration: none; font-size: 0.85rem;
@@ -44,126 +56,236 @@
             border-radius: var(--radius);
             padding: 1.5rem;
             margin-bottom: 1rem;
+            box-shadow: var(--card-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), #6bcf9e, var(--accent));
+            background-size: 200% 100%;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+        @keyframes shimmer {
+            0%, 100% { background-position: 0% 0%; }
+            50% { background-position: 100% 0%; }
         }
         h2 {
             font-size: 1.05rem;
             color: var(--accent);
-            margin-bottom: 12px;
+            margin-bottom: 16px;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
         }
         .step {
-            counter-increment: step-counter;
             margin-bottom: 20px;
-            padding-left: 10px;
+            padding-left: 12px;
             border-left: 2px solid var(--border);
         }
         .step:last-child { margin-bottom: 0; }
-        .step .num {
+        .step-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .step-num {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 26px; height: 26px;
+            min-width: 28px; height: 28px;
             background: var(--accent);
             color: var(--bg);
             border-radius: 50%;
             font-size: 0.8rem;
             font-weight: 700;
-            margin-right: 8px;
+            flex-shrink: 0;
         }
         .step h3 {
-            display: inline;
             font-size: 0.95rem;
             font-weight: 500;
+            padding-top: 3px;
         }
         .step p {
-            margin-top: 8px;
             font-size: 0.85rem;
             color: var(--text-muted);
             line-height: 1.7;
-        }
-        .step code {
-            display: block;
-            background: rgba(0,0,0,0.3);
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 0.8rem;
             margin-top: 6px;
+        }
+        .code-block {
+            background: rgba(0,0,0,0.35);
+            border: 1px solid var(--border);
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            margin-top: 8px;
             word-break: break-all;
             color: var(--accent-light);
-            font-family: monospace;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            line-height: 1.5;
         }
-        .step .note {
-            margin-top: 6px;
-            padding: 8px 12px;
+        .note {
+            margin-top: 8px;
+            padding: 10px 14px;
             background: rgba(107,207,158,0.1);
-            border-radius: 6px;
-            font-size: 0.8rem;
+            border: 1px solid rgba(107,207,158,0.2);
+            border-radius: 8px;
+            font-size: 0.82rem;
             color: #6bcf9e;
+            line-height: 1.6;
         }
+        .note.warning {
+            background: rgba(255,170,140,0.1);
+            border-color: rgba(255,170,140,0.2);
+            color: #ffaa8c;
+        }
+        .note strong { color: var(--text); }
         a { color: var(--accent); }
+        .screenshot {
+            margin-top: 8px;
+            padding: 12px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .screenshot svg { vertical-align: middle; }
+        @media (max-width: 480px) {
+            .card { padding: 1.2rem; }
+            .code-block { font-size: 0.7rem; padding: 10px; }
+        }
     </style>
 </head>
 <body>
 <div class="container">
     <header>
         <h1>⚙️ Google 試算表設定</h1>
+        <p class="subtitle">3 分鐘搞定！免 Cloud Console、免服務帳戶 🎉</p>
         <a href="{{ url_for('index') }}" class="back-link">← 回到掃描器</a>
     </header>
 
-    <div class="card" style="counter-reset: step-counter;">
-        <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:20px;line-height:1.6;">
-            想讓掃描的資料自動寫入 Google 試算表嗎？跟著以下步驟，5 分鐘搞定！
-        </p>
+    <div class="card">
+        <h2>📝 步驟說明</h2>
 
         <div class="step">
-            <h3><span class="num">1</span> 建立 Google Cloud 專案</h3>
-            <p>前往 <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a>，登入你的 Google 帳號，點擊頂端選單建立一個新專案（名稱隨便取，例如「passport-scanner」）。</p>
+            <div class="step-header">
+                <span class="step-num">1</span>
+                <h3>建立 Google 試算表</h3>
+            </div>
+            <p>前往 <a href="https://sheets.google.com/create" target="_blank">Google 試算表</a>，建立一個新的試算表，名稱取 <strong>護照掃描紀錄</strong>。</p>
+            <div class="note">📌 把試算表的網址複製下來存好，等下會用到</div>
         </div>
 
         <div class="step">
-            <h3><span class="num">2</span> 啟用 Google Sheets API</h3>
-            <p>在左側選單 → 「API 和服務」 → 「程式庫」，搜尋 <strong>Google Sheets API</strong>，點進去按「啟用」。</p>
+            <div class="step-header">
+                <span class="step-num">2</span>
+                <h3>打開 Apps Script 編輯器</h3>
+            </div>
+            <p>在試算表中，點選上方選單的 <strong>「延伸功能」→「Apps Script」</strong>。</p>
+            <p>它會在新分頁打開一個程式碼編輯器，把裡面預設的程式碼<strong>全部刪掉</strong>。</p>
         </div>
 
         <div class="step">
-            <h3><span class="num">3</span> 建立服務帳戶</h3>
-            <p>左側選單 → 「API 和服務」 → 「憑證」 → 上方點「建立憑證」 → 「服務帳戶」。</p>
-            <p>名稱填 <code>passport-scanner-sa</code>，角色可以先不用選，按「完成」。</p>
+            <div class="step-header">
+                <span class="step-num">3</span>
+                <h3>貼上這段程式碼</h3>
+            </div>
+            <p>把下面的程式碼全部複製，貼到 Apps Script 編輯器裡，完全覆蓋原本的內容：</p>
+            <div class="code-block">/**
+ * 小柴子護照掃描器 - Google 試算表 Webhook
+ */
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+
+    if (sheet.getLastRow() === 0) {
+      const headers = [
+        '掃描時間', '姓氏', '名字', '護照號碼', '國籍',
+        '出生日期', '性別', '有效期限', '個人ID',
+        '簽發日期', '出生地', '簽發機關',
+        'MRZ第一行', 'MRZ第二行', '原始OCR文字'
+      ];
+      sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+      sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
+    }
+
+    const row = [
+      data.掃描時間 || new Date().toLocaleString('zh-TW', {timeZone:'Asia/Taipei'}),
+      data.姓氏 || '', data.名字 || '', data.護照號碼 || '',
+      data.國籍 || '', data.出生日期 || '', data.性別 || '',
+      data.有效期限 || '', data.個人ID || '',
+      data.簽發日期 || '', data.出生地 || '', data.簽發機關 || '',
+      data.MRZ第一行 || '', data.MRZ第二行 || '',
+      (data.原始OCR文字 || '').substring(0, 500)
+    ];
+
+    sheet.appendRow(row);
+    return ContentService
+      .createTextOutput(JSON.stringify({ success: true }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ success: false, error: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  const data = sheet.getDataRange().getValues();
+  let html = '&lt;h2&gt;📋 護照掃描紀錄&lt;/h2&gt;&lt;p&gt;共 ' + (data.length-1) + ' 筆資料&lt;/p&gt;';
+  return HtmlService.createHtmlOutput(html);
+}</div>
         </div>
 
         <div class="step">
-            <h3><span class="num">4</span> 產生金鑰</h3>
-            <p>在服務帳戶列表找到剛建立的帳戶，點擊進入。切到「金鑰」分頁 → 「新增金鑰」 → 「JSON」。</p>
-            <p>瀏覽器會自動下載一個 <code>.json</code> 檔案，這就是你的私鑰！</p>
-            <div class="note">
-                📁 把這個 JSON 檔案存好，等一下要上傳到伺服器
+            <div class="step-header">
+                <span class="step-num">4</span>
+                <h3>部署為網頁應用程式</h3>
+            </div>
+            <p>在 Apps Script 編輯器中：</p>
+            <p>① 按左上角的 <strong>「部署」</strong> → <strong>「新增部署作業」</strong></p>
+            <p>② 類型選 <strong>「網頁應用程式」</strong></p>
+            <p>③ <strong>「執行身分」</strong> 選 <strong>「我」</strong>（你的 Google 帳號）</p>
+            <p>④ <strong>「誰可以存取」</strong> 選 <strong>「任何人」</strong></p>
+            <p>⑤ 按 <strong>「部署」</strong></p>
+            <div class="note warning">
+                ⚠️ 第一次部署時會跳出授權畫面，按「檢閱權限」→ 選你的 Google 帳號 → 「進階」→ 「前往...」→ 「允許」
             </div>
         </div>
 
         <div class="step">
-            <h3><span class="num">5</span> 建立 Google 試算表</h3>
-            <p>前往 <a href="https://sheets.google.com/" target="_blank">Google 試算表</a>，建立一個新的試算表。名稱建議取 <strong>護照掃描紀錄</strong>。</p>
-            <p>點擊右上角「共用」，加入剛才的服務帳戶 Email（在 JSON 金鑰檔裡面的 <code>client_email</code> 欄位），權限設為「編輯者」。</p>
-            <div class="note">
-                📌 把試算表的網址記下來，裡面的 ID 長這樣：<code>1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms</code>
+            <div class="step-header">
+                <span class="step-num">5</span>
+                <h3>複製網址 &amp; 設定到 App</h3>
             </div>
-        </div>
-
-        <div class="step">
-            <h3><span class="num">6</span> 設定到 App 中</h3>
-            <p>將以下兩個環境變數設定到你的伺服器：</p>
-            <code>GOOGLE_SHEET_CREDENTIALS_JSON = (把 JSON 金鑰檔的內容整段貼進來)</code>
-            <code>GOOGLE_SHEET_ID = 你的試算表ID（上面網址裡那一串）</code>
-            <p style="margin-top:8px;">設定完成後重新啟動 App，右上角就會出現 ✅ Google 試算表已連線！</p>
+            <p>部署完成後，會出現一個網址（長得像 <code>https://script.google.com/macros/s/.../exec</code>）。</p>
+            <p><strong>把這個網址複製下來</strong>。</p>
+            <div class="note">✅ 然後到 Render 的 Dashboard → 你的服務 → Environment → 新增變數：<br><br>
+            <strong>GOOGLE_SHEET_WEBHOOK_URL</strong> = 你剛剛複製的那串網址<br><br>
+            儲存後，Render 會自動重新啟動 App，右上角就會出現 ✅ Google 試算表已連線！</div>
         </div>
     </div>
 
     <div class="card" style="text-align:center;">
-        <p style="color:var(--text-muted);font-size:0.85rem;">不想設定 Google 試算表？沒關係！</p>
-        <p style="margin-top:6px;">App 還是可以正常掃描護照，只是資料不會自動儲存喔～</p>
-        <p style="margin-top:12px;"><a href="{{ url_for('index') }}" style="color:var(--accent);text-decoration:none;">← 直接開始掃描</a></p>
+        <h2>🎬 懶得看字？</h2>
+        <p style="color:var(--text-muted);font-size:0.85rem;line-height:1.6;">
+            簡單講就是：<br>
+            開試算表 → 延伸功能→Apps Script → 貼程式碼 → 部署 → 複製網址 → 貼到 Render
+        </p>
+        <p style="margin-top:12px;font-size:0.85rem;">
+            有問題隨時問小柴子！😊
+        </p>
+        <p style="margin-top:16px;">
+            <a href="{{ url_for('index') }}" style="color:var(--accent);text-decoration:none;">← 回到掃描器</a>
+        </p>
     </div>
 </div>
 </body>
